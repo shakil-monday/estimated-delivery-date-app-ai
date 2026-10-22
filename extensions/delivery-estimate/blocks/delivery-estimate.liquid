@@ -1,0 +1,59 @@
+{%- liquid
+  assign config = shop.metafields['$app:delivery'].config.value
+  # Reserve roughly the rendered height so the widget causes no layout shift.
+  # Mirrors estimateHeight() in assets/render.js.
+  assign min_height = 0
+  if config and config.design
+    assign d = config.design
+    assign line = d.fontSize | default: 14 | times: 1.4 | round
+    assign icon = 0
+    if d.icon != 'none'
+      assign icon = d.iconSize | default: 20
+    endif
+    if d.layout == 'icon-top'
+      assign content = line
+      if icon > 0
+        assign content = line | plus: icon | plus: 6
+      endif
+    else
+      assign content = line
+      if icon > line
+        assign content = icon
+      endif
+    endif
+    assign chrome = d.padding | default: 0 | plus: d.borderWidth | times: 2
+    assign min_height = content | plus: chrome
+  endif
+-%}
+{%- if config -%}
+  <div
+    class="ede-widget"
+    style="min-height: {{ min_height | default: 48 }}px"
+    data-config="{{ config | json | escape }}"
+    data-country="{{ localization.country.iso_code }}"
+    data-locale="{{ request.locale.iso_code }}"
+    data-inherit-font="{{ block.settings.inherit_font }}"
+    {{ block.shopify_attributes }}
+  ></div>
+  <script src="{{ 'widget.js' | asset_url }}" type="module"></script>
+{%- elsif request.design_mode -%}
+  <p {{ block.shopify_attributes }}>
+    {{ 'blocks.delivery_estimate.not_configured' | t }}
+  </p>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Delivery estimate",
+  "target": "section",
+  "stylesheet": "widget.css",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "inherit_font",
+      "label": "Use theme font",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

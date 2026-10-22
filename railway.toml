@@ -1,0 +1,9 @@
+[build]
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+startCommand = "npm run docker-start"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

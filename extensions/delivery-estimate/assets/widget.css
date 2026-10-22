@@ -1,0 +1,69 @@
+.ede-widget {
+  margin: 0.5rem 0;
+}
+
+.ede {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: var(--ede-justify, flex-start);
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: var(--ede-pad, 12px);
+  color: var(--ede-text, #1f2124);
+  background: var(--ede-bg, transparent);
+  border: var(--ede-border-width, 0) solid var(--ede-border, transparent);
+  border-radius: var(--ede-radius, 0);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: var(--ede-size, 14px);
+  font-weight: var(--ede-weight, 400);
+  line-height: 1.4;
+  text-align: var(--ede-align, left);
+}
+
+.ede.ede--inherit-font {
+  font-family: inherit;
+}
+
+.ede--icon-top {
+  flex-direction: column;
+  align-items: var(--ede-justify, flex-start);
+  gap: 6px;
+}
+
+.ede--pill {
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--ede-pad, 8px) calc(var(--ede-pad, 8px) * 1.5);
+}
+
+.ede--pill.ede--align-center {
+  margin-inline: auto;
+}
+
+.ede--pill.ede--align-right {
+  margin-inline-start: auto;
+}
+
+.ede__icon {
+  display: inline-flex;
+  flex: none;
+  width: var(--ede-icon-size, 20px);
+  height: var(--ede-icon-size, 20px);
+  color: var(--ede-icon, currentColor);
+}
+
+.ede__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ede__text {
+  min-width: 0;
+}
+
+.ede__date {
+  color: var(--ede-accent, inherit);
+  font-weight: 700;
+}

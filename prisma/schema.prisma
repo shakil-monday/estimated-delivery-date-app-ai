@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model ShopSettings {
+  id               Int       @id @default(autoincrement())
+  shop             String    @unique
+  timezone         String    @default("UTC") // shop's IANA timezone, from Admin API shop.ianaTimezone
+  processingMin    Int       @default(1)
+  processingMax    Int       @default(2)
+  shippingMin      Int       @default(3)
+  shippingMax      Int       @default(5)
+  weekendDays      String    @default("[0,6]") // JSON array, 0=Sunday … 6=Saturday
+  unmatchedCountry String    @default("useDefault") // "useDefault" | "hide"
+  displayMode      String    @default("range") // "range" | "single"
+  messageRange     String    @default("Arrives {start} – {end}")
+  messageSingle    String    @default("Arrives by {end}")
+  dateFormat       String    @default("short") // "short" | "long"
+  lastSyncedAt     DateTime?
+  syncError        String?
+  settingsSavedAt  DateTime? // onboarding checklist: merchant saved Settings
+  designSavedAt    DateTime? // onboarding checklist: merchant saved Design
+  updatedAt        DateTime  @updatedAt
+}
+
+model WidgetDesign {
+  id        Int      @id @default(autoincrement())
+  shop      String   @unique
+  preset    String   @default("boxed") // "minimal" | "boxed" | "pill" | "banner"
+  style     String // JSON of design tokens
+  updatedAt DateTime @updatedAt
+}
+
+model Holiday {
+  id            Int      @id @default(autoincrement())
+  shop          String
+  date          String // "YYYY-MM-DD"; for yearly holidays the first occurrence
+  name          String
+  repeatsYearly Boolean  @default(false)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@unique([shop, date, name])
+  @@index([shop, date])
+}
+
+model Region {
+  id          Int    @id @default(autoincrement())
+  shop        String
+  name        String
+  countries   String // JSON array of ISO 3166-1 alpha-2 codes
+  shippingMin Int
+  shippingMax Int
+
+  @@index([shop])
+}

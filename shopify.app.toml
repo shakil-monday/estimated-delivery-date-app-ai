@@ -1,0 +1,53 @@
+# This file stores configurations for your Shopify app.
+# Run `npm run config:link` to link it to your app in the Partner Dashboard (fills client_id, name, URLs).
+client_id = "357f94f70897d2fb2b6b463caad0346"
+name = "Estimated Delivery Date"
+# Placeholder: `shopify app dev` replaces it with the tunnel URL (see [build]).
+# For production, set it to your Railway URL before `npm run deploy`.
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
+
+[access_scopes]
+# read_products: find a product page for "Preview on your store".
+# read_themes: check whether the app block is in the live theme.
+scopes = "read_products,read_themes"
+
+[webhooks]
+api_version = "2026-10"
+
+  # Handled by: /app/routes/webhooks.app.uninstalled.tsx
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  # Handled by: /app/routes/webhooks.app.scopes_update.tsx
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  # Mandatory compliance topics. See: https://shopify.dev/docs/apps/build/privacy-law-compliance
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = ["customers/data_request"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = ["customers/redact"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = ["shop/redact"]
+
+# Storefront config, written by app/services/sync.server.ts and read by the theme app extension.
+# Namespace in the API: $app:delivery, key: config.
+[shop.metafields.delivery.config]
+type = "json"
+name = "Delivery estimate config"
+access.storefront = "public_read"

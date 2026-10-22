@@ -1,0 +1,7 @@
+{
+  "blocks": {
+    "delivery_estimate": {
+      "not_configured": "Delivery estimate: open the Estimated Delivery Date app to finish setup."
+    }
+  }
+}
