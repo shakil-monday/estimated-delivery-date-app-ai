@@ -86,3 +86,45 @@ model Region {
 
   @@index([shop])
 }
+
+// ---- Billing & owner analytics. Kept on shop/redact (business records). ----
+
+model ShopInstall {
+  id               Int       @id @default(autoincrement())
+  shop             String    @unique
+  firstInstalledAt DateTime  @default(now())
+  lastInstalledAt  DateTime  @default(now())
+  uninstalledAt    DateTime? // null = currently installed
+  installCount     Int       @default(1)
+  plan             String    @default("free") // "free" | "pro"
+  appHandle        String? // for the billing returnUrl
+  billingCheckedAt DateTime? // last billing.check safety-net run
+}
+
+model AppSubscription {
+  id             Int       @id @default(autoincrement())
+  shop           String
+  subscriptionId String    @unique // gid://shopify/AppSubscription/…
+  name           String
+  status         String // PENDING | ACTIVE | DECLINED | EXPIRED | FROZEN | CANCELLED
+  price          Decimal
+  currency       String    @default("USD")
+  trialDays      Int       @default(0)
+  test           Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  activatedAt    DateTime?
+  frozenAt       DateTime? // set while FROZEN; billed-to-date pauses
+  frozenDays     Int       @default(0) // total days spent frozen (completed freezes)
+  endedAt        DateTime?
+
+  @@index([shop])
+}
+
+model AppEvent {
+  id        Int      @id @default(autoincrement())
+  shop      String
+  type      String // install | reinstall | uninstall | subscription_<status>
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+}

@@ -11,6 +11,9 @@ import { validateRegion, type Errors } from "../lib/validation";
 import { COUNTRIES, countryName } from "../lib/countries";
 import { Checkbox, Modal, NumberField, SearchField, TextField } from "../components/fields";
 import { SyncBanner } from "../components/SyncBanner";
+import { PRO_REQUIRED_ERROR, ProBanner } from "../components/ProBanner";
+import { getPlan } from "../services/analytics.server";
+import { isPro } from "../lib/plans";
 import { useFetcherResult } from "../components/hooks";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -23,6 +26,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     regions: regions.map(regionValues),
     defaultShipping: { min: settings?.shippingMin ?? 3, max: settings?.shippingMax ?? 5 },
     unmatchedCountry: settings?.unmatchedCountry ?? "useDefault",
+    isPro: isPro(await getPlan(session.shop)),
   };
 };
 
@@ -34,6 +38,9 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionRes
   const body = await request.json();
   const id = body.id ? Number(body.id) : undefined;
 
+  if (body.intent === "save" && !isPro(await getPlan(shop))) {
+    return { ok: false, errors: { form: PRO_REQUIRED_ERROR } };
+  }
   if (body.intent === "save") {
     const others = (await db.region.findMany({ where: { shop } })).map(regionValues).filter((r) => r.id !== id);
     const result = validateRegion(body, others);
@@ -55,7 +62,7 @@ type Region = ReturnType<typeof regionValues>;
 const emptyForm = { id: 0, name: "", countries: [] as string[], shippingMin: "3" as string | number, shippingMax: "5" as string | number };
 
 export default function RegionsPage() {
-  const { regions, defaultShipping, unmatchedCountry } = useLoaderData<typeof loader>();
+  const { regions, defaultShipping, unmatchedCountry, isPro: pro } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<ActionResult>();
   const shopify = useAppBridge();
   const [form, setForm] = useState(emptyForm);
@@ -96,6 +103,10 @@ export default function RegionsPage() {
   }, [search]);
 
   const openForm = (r?: Region) => {
+    if (!pro) {
+      shopify.toast.show(PRO_REQUIRED_ERROR, { isError: true });
+      return;
+    }
     setForm(r ? { ...r } : { ...emptyForm, shippingMin: defaultShipping.min, shippingMax: defaultShipping.max });
     setErrors({});
     setSearch("");
@@ -107,11 +118,14 @@ export default function RegionsPage() {
 
   return (
     <s-page heading="Regions">
-      <s-button slot="primary-action" variant="primary" onClick={() => openForm()}>
-        Add region
-      </s-button>
+      {pro && (
+        <s-button slot="primary-action" variant="primary" onClick={() => openForm()}>
+          Add region
+        </s-button>
+      )}
 
       <SyncBanner />
+      {!pro && <ProBanner feature="Regions" />}
 
       <s-banner tone="info">
         Shoppers from countries that aren&apos;t in any region{" "}

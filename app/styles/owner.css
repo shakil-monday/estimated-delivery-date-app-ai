@@ -1,0 +1,203 @@
+/* Owner panel (outside Shopify; Polaris isn't loaded here). */
+.owner {
+  --bg: #f6f6f7;
+  --card: #ffffff;
+  --text: #1f2124;
+  --muted: #6d7175;
+  --border: #e1e3e5;
+  --accent: #2c6ecb;
+  --good: #008060;
+  --bad: #d72c0d;
+  min-height: 100vh;
+  margin: 0;
+  padding: 24px 16px 48px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.owner * {
+  box-sizing: border-box;
+}
+
+.owner__wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.owner__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.owner h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.owner h2 {
+  margin: 28px 0 12px;
+  font-size: 15px;
+}
+
+.owner__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.owner__card {
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.owner__label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.owner__value {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.owner__hint {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.owner__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.owner input[type="search"],
+.owner input[type="password"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  min-width: 220px;
+}
+
+.owner button,
+.owner .owner__button {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.owner button.primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+
+.owner__table-wrap {
+  overflow-x: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.owner table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.owner th,
+.owner td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.owner th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.owner tr:last-child td {
+  border-bottom: 0;
+}
+
+.owner__badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #e4e5e7;
+  font-size: 12px;
+}
+
+.owner__badge--pro {
+  background: #cdfee1;
+  color: #0c5132;
+}
+
+.owner__badge--gone {
+  background: #fee9e8;
+  color: #8e1f0b;
+}
+
+.owner__chart {
+  width: 100%;
+  height: auto;
+}
+
+.owner__legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.owner__legend span::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: currentColor;
+  vertical-align: -1px;
+}
+
+.owner__login {
+  max-width: 340px;
+  margin: 12vh auto 0;
+}
+
+.owner__login form {
+  display: grid;
+  gap: 12px;
+}
+
+.owner__error {
+  color: var(--bad);
+}
+
+.owner__note {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}

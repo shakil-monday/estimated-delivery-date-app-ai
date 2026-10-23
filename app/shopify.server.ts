@@ -2,10 +2,13 @@ import "@shopify/shopify-app-react-router/adapters/node";
 import {
   ApiVersion,
   AppDistribution,
+  BillingInterval,
   shopifyApp,
 } from "@shopify/shopify-app-react-router/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
+import { PRO_CURRENCY, PRO_PLAN, PRO_PRICE, PRO_TRIAL_DAYS } from "./lib/plans";
+import { recordInstall } from "./services/analytics.server";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -16,6 +19,18 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
+  billing: {
+    [PRO_PLAN]: {
+      trialDays: PRO_TRIAL_DAYS,
+      lineItems: [{ amount: PRO_PRICE, currencyCode: PRO_CURRENCY, interval: BillingInterval.Every30Days }],
+    },
+  },
+  hooks: {
+    // Runs when a new offline session is created: first install or reinstall.
+    afterAuth: async ({ session }) => {
+      await recordInstall(session.shop);
+    },
+  },
   future: {
     expiringOfflineAccessTokens: true,
   },

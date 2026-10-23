@@ -3,6 +3,7 @@ import db from "../db.server";
 import { DEFAULT_PRESET, PRESETS, type Design, type Preset } from "../lib/presets";
 import { parseJSON, type SettingsInput } from "../lib/validation";
 import type { RegionValues } from "../lib/config";
+import { isPro } from "../lib/plans";
 
 export function settingsValues(row: ShopSettings): SettingsInput {
   return {
@@ -46,15 +47,17 @@ export function holidayValues(row: Holiday) {
 
 /** Loads every row for a shop. Assumes ensureShopSetup has run. */
 export async function loadShopData(shop: string) {
-  const [settings, design, holidays, regions] = await Promise.all([
+  const [settings, design, holidays, regions, install] = await Promise.all([
     db.shopSettings.findUnique({ where: { shop } }),
     db.widgetDesign.findUnique({ where: { shop } }),
     db.holiday.findMany({ where: { shop }, orderBy: [{ date: "asc" }, { name: "asc" }] }),
     db.region.findMany({ where: { shop }, orderBy: { name: "asc" } }),
+    db.shopInstall.findUnique({ where: { shop }, select: { plan: true } }),
   ]);
   if (!settings) throw new Error(`No settings for ${shop}`);
   return {
     settingsRow: settings,
+    isPro: isPro(install?.plan),
     timezone: settings.timezone,
     settings: settingsValues(settings),
     design: designValues(design),

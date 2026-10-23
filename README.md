@@ -68,9 +68,44 @@ npx prisma migrate diff --from-schema-datamodel <previous pg schema> \
 ## Deploy to Railway
 
 1. Create a Railway project with a **Node service** (this repo) and a **PostgreSQL** database.
-2. Set these service variables: `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `SHOPIFY_APP_URL` (the Railway URL), `SCOPES=read_products,read_themes`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`. See `.env.example`.
+2. Set these service variables: `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `SHOPIFY_APP_URL` (the Railway URL), `SCOPES=read_products,read_themes`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, plus `OWNER_PASSWORD` and `OWNER_SESSION_SECRET` for the owner panel. See `.env.example`.
 3. `railway.toml` builds with `npm ci && npm run build`, starts with `npm run docker-start` (which generates the Prisma client, runs `migrate deploy` and starts the server), and uses `/health` as its health check.
 4. Set `application_url` and the redirect URLs in `shopify.app.toml` to the Railway URL, then run `npm run deploy`. This pushes the app config, the metafield definition, the webhooks and the theme extension.
+
+## Billing (Free / Pro)
+
+Plans are defined in `app/lib/plans.ts` and registered in `app/shopify.server.ts` (Shopify Billing API). See `plans/pro-subscription-and-owner-analytics-panel.md` for the full design.
+
+| | Free | Pro ($4.99 / 30 days, 7-day trial) |
+|---|---|---|
+| Processing / shipping days, weekends, presets, preview | ✓ | ✓ |
+| Holidays, regions, custom widget design | — | ✓ |
+| "Powered by" note under the widget | shown | hidden |
+
+- **Merchant page:** **Plan** (`app/routes/app.plan.tsx`) starts the trial with `billing.request` (Shopify shows its approval page) and cancels with `billing.cancel`. Each shop gets one trial; returning subscribers are charged immediately.
+- **Source of truth:** the `app_subscriptions/update` webhook (`app/routes/webhooks.app_subscriptions.update.tsx`) updates `AppSubscription` and `ShopInstall.plan`, then re-syncs the storefront config.
+  - `refreshBilling` (`app/services/billing.server.ts`) re-reads every subscription from Shopify once a day, and right after the merchant approves a charge, in case a webhook was missed.
+- **The rule:** Pro only while a subscription is `ACTIVE`. `FROZEN` means the merchant's Shopify bill is unpaid; the shop drops to Free until Shopify unfreezes it, then Pro returns automatically.
+- **Gating** happens in `buildConfig` (`app/lib/config.ts`).
+  - Free shops' holidays, regions and custom design stay in the database and apply again on the next sync after upgrading.
+  - The Holidays, Regions and Design actions reject Pro-only changes on Free. Deleting is still allowed.
+- **Test charges:** used whenever `NODE_ENV !== "production"` or `BILLING_TEST=true`. Development stores can't be charged for real.
+- **App Store listing:** enter the same pricing there.
+
+## Owner panel
+
+`<app-url>/owner` is a private dashboard for you, outside Shopify. It is enabled only when `OWNER_PASSWORD` and `OWNER_SESSION_SECRET` are set, and returns 404 otherwise. Login is password-only, with a signed cookie valid for 7 days and a limit of 5 failed attempts per IP per 15 minutes.
+
+- **Installs:** total (including reinstalls), uninstalls, currently installed, this month, last 30 days, and a 12-week chart.
+  - Recorded by the `afterAuth` hook (install or reinstall) and the `app/uninstalled` webhook, in `app/services/analytics.server.ts`.
+- **Subscriptions:**
+  - current MRR (paying, past trial),
+  - **estimated** total billed to date (started 30-day periods after the trial, minus frozen time),
+  - counts: paying, in trial, frozen, cancelled, and conversion.
+  - Test charges are hidden unless you tick "Show test charges".
+  - The estimate ignores refunds, prorations and Shopify's revenue share. Use the Partner Dashboard for actual payouts.
+- **Shops table:** searchable by domain.
+- **What `shop/redact` keeps:** the `ShopInstall`, `AppSubscription` and `AppEvent` rows. They are business and billing records with no customer data, so mention them in your privacy policy.
 
 ## Decisions and deviations from the build plan
 

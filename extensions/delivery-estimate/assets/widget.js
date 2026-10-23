@@ -1,6 +1,6 @@
 // Storefront entry point. Loaded as a module (deferred by default).
 import { calculateEstimate, formatEstimateParts } from "./estimate.js";
-import { renderWidget } from "./render.js";
+import { renderBranding, renderWidget } from "./render.js";
 
 function collapse(el) {
   el.style.minHeight = "";
@@ -22,6 +22,7 @@ function mount(el) {
     const widget = renderWidget(config.design, parts);
     if (el.dataset.inheritFont === "true") widget.classList.add("ede--inherit-font");
     el.replaceChildren(widget);
+    if (config.branding) el.appendChild(renderBranding());
     el.style.minHeight = "";
   } catch (e) {
     collapse(el);

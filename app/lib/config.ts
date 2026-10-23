@@ -1,5 +1,5 @@
 import { expandHolidays, type HolidayLike } from "./holidays";
-import type { Design } from "./presets";
+import { PRESETS, type Design } from "./presets";
 import type { SettingsInput } from "./validation";
 
 export const CONFIG_VERSION = 1;
@@ -26,10 +26,17 @@ export interface StorefrontConfig {
   messageSingle: string;
   dateFormat: "short" | "long";
   design: Design;
+  /** Free plan: show the small "Powered by" note. */
+  branding: boolean;
 }
 
-/** Builds the storefront config (metafield `$app:delivery.config`). Pure. */
+/**
+ * Builds the storefront config (metafield `$app:delivery.config`). Pure.
+ * Free plan: no holidays, no regions, preset design only, plus a branding note.
+ * The merchant's Pro data is not touched; it applies again once they're Pro.
+ */
 export function buildConfig(input: {
+  isPro: boolean;
   timezone: string;
   settings: SettingsInput;
   design: Design;
@@ -37,15 +44,16 @@ export function buildConfig(input: {
   regions: RegionValues[];
   today: string;
 }): StorefrontConfig {
-  const { settings } = input;
+  const { settings, isPro } = input;
+  const design: Design = isPro ? input.design : { ...PRESETS[input.design.preset], preset: input.design.preset };
   return {
     version: CONFIG_VERSION,
     timezone: input.timezone,
     processing: { min: settings.processingMin, max: settings.processingMax },
     shipping: { min: settings.shippingMin, max: settings.shippingMax },
     weekendDays: settings.weekendDays,
-    holidays: expandHolidays(input.holidays, input.today),
-    regions: input.regions.map((r) => ({
+    holidays: isPro ? expandHolidays(input.holidays, input.today) : [],
+    regions: (isPro ? input.regions : []).map((r) => ({
       name: r.name,
       countries: r.countries,
       shipping: { min: r.shippingMin, max: r.shippingMax },
@@ -55,6 +63,7 @@ export function buildConfig(input: {
     messageRange: settings.messageRange,
     messageSingle: settings.messageSingle,
     dateFormat: settings.dateFormat,
-    design: input.design,
+    design,
+    branding: !isPro,
   };
 }

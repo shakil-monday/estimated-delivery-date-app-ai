@@ -6,6 +6,7 @@ import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 import { ensureShopSetup } from "../services/sync.server";
+import { refreshBilling } from "../services/billing.server";
 // Storefront widget styles, for the admin preview (see vite.config.ts).
 // eslint-disable-next-line import/no-unresolved
 import widgetCss from "virtual:ede-widget-css";
@@ -13,6 +14,7 @@ import widgetCss from "virtual:ede-widget-css";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
   await ensureShopSetup(admin, session.shop);
+  const plan = await refreshBilling(admin, session.shop); // daily safety net for missed webhooks
   const settings = await db.shopSettings.findUnique({
     where: { shop: session.shop },
     select: { lastSyncedAt: true, syncError: true },
@@ -21,6 +23,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // eslint-disable-next-line no-undef
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
+    plan,
     sync: {
       lastSyncedAt: settings?.lastSyncedAt?.toISOString() ?? null,
       syncError: settings?.syncError ?? null,
@@ -40,6 +43,7 @@ export default function App() {
         <s-link href="/app/design">Design</s-link>
         <s-link href="/app/holidays">Holidays</s-link>
         <s-link href="/app/regions">Regions</s-link>
+        <s-link href="/app/plan">Plan</s-link>
       </s-app-nav>
       <Outlet />
     </AppProvider>

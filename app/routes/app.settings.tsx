@@ -26,6 +26,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     holidays: data.holidays,
     regions: data.regions,
     timezone: data.timezone,
+    isPro: data.isPro,
     today: todayInTimezone(new Date(), data.timezone),
     storeInfo: getStoreInfo(admin, session.shop), // not awaited: streams in
   };
@@ -189,6 +190,7 @@ export default function SettingsPage() {
           regions={data.regions}
           timezone={data.timezone}
           today={data.today}
+          isPro={data.isPro}
           storeInfo={data.storeInfo}
         />
       </div>

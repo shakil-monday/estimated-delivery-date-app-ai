@@ -6,6 +6,8 @@ import { authenticate } from "../shopify.server";
 import db from "../db.server";
 import { SyncBanner } from "../components/SyncBanner";
 import { getStoreInfo, type StoreInfo } from "../services/store-info.server";
+import { getPlan } from "../services/analytics.server";
+import { PRO_TRIAL_DAYS } from "../lib/plans";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -15,6 +17,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     designSaved: Boolean(settings?.designSavedAt),
     lastSyncedAt: settings?.lastSyncedAt?.toISOString() ?? null,
     syncError: settings?.syncError ?? null,
+    plan: await getPlan(session.shop),
     storeInfo: getStoreInfo(admin, session.shop), // not awaited: streams in
   };
 };
@@ -95,6 +98,20 @@ export default function Home() {
                   : "Not synced yet."}
             </s-paragraph>
           </Step>
+        </s-stack>
+      </s-section>
+
+      <s-section slot="aside" heading="Your plan">
+        <s-stack direction="block" gap="base">
+          <s-paragraph>
+            <s-badge tone={data.plan === "pro" ? "success" : "neutral"}>{data.plan === "pro" ? "Pro" : "Free"}</s-badge>
+          </s-paragraph>
+          <s-paragraph>
+            {data.plan === "pro"
+              ? "Holidays, regions and custom design are on."
+              : `Upgrade to Pro for holidays, regions and custom design. ${PRO_TRIAL_DAYS}-day free trial.`}
+          </s-paragraph>
+          <s-link href="/app/plan">{data.plan === "pro" ? "Manage plan" : "See plans"}</s-link>
         </s-stack>
       </s-section>
 

@@ -5,7 +5,7 @@ import {
   formatDate,
   formatEstimateParts,
 } from "../../extensions/delivery-estimate/assets/estimate.js";
-import { renderWidget } from "../../extensions/delivery-estimate/assets/render.js";
+import { renderBranding, renderWidget } from "../../extensions/delivery-estimate/assets/render.js";
 import { buildConfig, type RegionValues } from "../lib/config";
 import type { HolidayLike } from "../lib/holidays";
 import { validateDesign, validateSettings } from "../lib/validation";
@@ -22,6 +22,8 @@ export interface PreviewPanelProps {
   timezone: string;
   /** Today in the shop timezone, "YYYY-MM-DD". */
   today: string;
+  /** Same gating as the storefront: Free = no holidays/regions, preset design, branding note. */
+  isPro: boolean;
   /** Deferred from the loader (see getStoreInfo). */
   storeInfo: Promise<StoreInfo>;
 }
@@ -39,6 +41,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     if (!settings.ok || !design.ok) return { invalid: true as const };
     const today = /^\d{4}-\d{2}-\d{2}$/.test(simDate) ? simDate : props.today;
     const config = buildConfig({
+      isPro: props.isPro,
       timezone: props.timezone,
       settings: settings.data,
       design: design.data,
@@ -49,7 +52,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     const result = calculateEstimate(config, { today, countryCode: country || null });
     const parts = formatEstimateParts(result, config, "en-US");
     return { invalid: false as const, config, result, parts };
-  }, [props.settings, props.design, props.holidays, props.regions, props.timezone, props.today, simDate, country]);
+  }, [props.settings, props.design, props.holidays, props.regions, props.timezone, props.today, props.isPro, simDate, country]);
 
   useEffect(() => {
     const el = previewRef.current;
@@ -59,6 +62,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
     el.replaceChildren(renderWidget(computed.config.design, computed.parts));
+    if (computed.config.branding) el.appendChild(renderBranding());
   }, [computed]);
 
   const explanation = (() => {

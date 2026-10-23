@@ -106,6 +106,7 @@ describe("buildConfig", () => {
       active: true,
     }));
     const config = buildConfig({
+      isPro: true,
       timezone: "America/New_York",
       settings: parsed.data,
       design: { preset: "boxed", ...PRESETS.boxed },

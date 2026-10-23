@@ -23,6 +23,10 @@
     endif
     assign chrome = d.padding | default: 0 | plus: d.borderWidth | times: 2
     assign min_height = content | plus: chrome
+    # Free plan "Powered by" note: BRANDING_HEIGHT in render.js.
+    if config.branding
+      assign min_height = min_height | plus: 18
+    endif
   endif
 -%}
 {%- if config -%}

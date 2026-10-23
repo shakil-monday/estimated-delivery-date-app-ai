@@ -67,3 +67,10 @@
   color: var(--ede-accent, inherit);
   font-weight: 700;
 }
+
+.ede-branding {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 14px;
+  opacity: 0.6;
+}

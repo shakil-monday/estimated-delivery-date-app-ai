@@ -19,6 +19,9 @@ import { nextOccurrence } from "../lib/holidays";
 import { todayInTimezone } from "../../extensions/delivery-estimate/assets/estimate.js";
 import { Checkbox, DateField, Modal, SearchField, Select, Switch, TextField } from "../components/fields";
 import { SyncBanner } from "../components/SyncBanner";
+import { PRO_REQUIRED_ERROR, ProBanner } from "../components/ProBanner";
+import { getPlan } from "../services/analytics.server";
+import { isPro } from "../lib/plans";
 import { useFetcherResult } from "../components/hooks";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -30,6 +33,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {
     holidays: holidays.map(holidayValues),
     today: todayInTimezone(new Date(), settings?.timezone ?? "UTC"),
+    isPro: isPro(await getPlan(session.shop)),
   };
 };
 
@@ -40,6 +44,11 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionRes
   const shop = session.shop;
   const body = await request.json();
   const ids: number[] = Array.isArray(body.ids) ? body.ids.map(Number).filter(Number.isInteger) : [];
+
+  // Free shops may view and delete, but not add, edit or activate holidays.
+  if (body.intent !== "delete" && !isPro(await getPlan(shop))) {
+    return { ok: false, errors: { form: PRO_REQUIRED_ERROR } };
+  }
 
   switch (body.intent) {
     case "save": {
@@ -101,7 +110,7 @@ const YEARLY_HELP =
 const emptyForm = (today: string) => ({ id: 0, date: today, name: "", repeatsYearly: false, active: true });
 
 export default function HolidaysPage() {
-  const { holidays, today } = useLoaderData<typeof loader>();
+  const { holidays, today, isPro: pro } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<ActionResult>();
   const shopify = useAppBridge();
 
@@ -159,6 +168,10 @@ export default function HolidaysPage() {
   }, [holidays, status, query, tab, today]);
 
   const openForm = (h?: Holiday) => {
+    if (!pro) {
+      shopify.toast.show(PRO_REQUIRED_ERROR, { isError: true });
+      return;
+    }
     setForm(h ? { ...h } : emptyForm(today));
     setFormErrors({});
     setFormOpen(true);
@@ -177,11 +190,14 @@ export default function HolidaysPage() {
 
   return (
     <s-page heading="Holidays">
-      <s-button slot="primary-action" variant="primary" onClick={() => openForm()}>
-        Add holiday
-      </s-button>
+      {pro && (
+        <s-button slot="primary-action" variant="primary" onClick={() => openForm()}>
+          Add holiday
+        </s-button>
+      )}
 
       <SyncBanner />
+      {!pro && <ProBanner feature="Holidays" />}
 
       <s-section padding="none">
         <s-stack direction="block" gap="base" padding="base">

@@ -2,13 +2,28 @@ import { ICONS } from "./icons.js";
 
 const ALIGN = { left: "flex-start", center: "center", right: "flex-end" };
 
-/** Approximate rendered height in px, used to reserve space and avoid layout shift. */
-export function estimateHeight(design) {
+// Free plan note under the widget: 14px line + 4px margin (see widget.css).
+export const BRANDING_HEIGHT = 18;
+const BRANDING_TEXT = "Powered by Estimated Delivery Date";
+
+/**
+ * Approximate rendered height in px, used to reserve space and avoid layout shift.
+ * Keep in sync with the Liquid calculation in blocks/delivery-estimate.liquid.
+ */
+export function estimateHeight(design, branding = false) {
   const d = design || {};
   const line = Math.round((d.fontSize || 14) * 1.4);
   const icon = d.icon && d.icon !== "none" ? d.iconSize || 20 : 0;
   const content = d.layout === "icon-top" ? line + (icon ? icon + 6 : 0) : Math.max(line, icon);
-  return content + 2 * (d.padding || 0) + 2 * (d.borderWidth || 0);
+  return content + 2 * (d.padding || 0) + 2 * (d.borderWidth || 0) + (branding ? BRANDING_HEIGHT : 0);
+}
+
+/** The Free plan's "Powered by" note, placed after the widget. */
+export function renderBranding(doc = document) {
+  const el = doc.createElement("div");
+  el.className = "ede-branding";
+  el.textContent = BRANDING_TEXT;
+  return el;
 }
 
 /**

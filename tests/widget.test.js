@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { estimateHeight, renderWidget } from "../extensions/delivery-estimate/assets/render.js";
+import { BRANDING_HEIGHT, estimateHeight, renderBranding, renderWidget } from "../extensions/delivery-estimate/assets/render.js";
 import { PRESETS } from "../app/lib/presets";
 
 const design = { preset: "boxed", ...PRESETS.boxed };
@@ -33,6 +33,12 @@ describe("renderWidget", () => {
     // boxed: max(14*1.4≈20, icon 20) + 2*12 padding + 2*1 border
     expect(estimateHeight(design)).toBe(46);
     expect(estimateHeight({ ...design, layout: "icon-top" })).toBe(20 + 20 + 6 + 26);
+  });
+
+  it("adds the Free plan branding note's height", () => {
+    expect(BRANDING_HEIGHT).toBe(18); // also hard-coded in delivery-estimate.liquid
+    expect(estimateHeight(design, true)).toBe(46 + 18);
+    expect(renderBranding().textContent).toBe("Powered by Estimated Delivery Date");
   });
 });
 
@@ -69,6 +75,12 @@ describe("widget.js", () => {
     vi.resetModules();
   });
 
+  it("shows the branding note for Free plan configs", async () => {
+    const free = placeholder({ ...config, branding: true }, "DE");
+    await import("../extensions/delivery-estimate/assets/widget.js");
+    expect(free.querySelector(".ede-branding")).not.toBeNull();
+  });
+
   it("renders valid configs and collapses invalid or hidden ones without throwing", async () => {
     const ok = placeholder(config, "DE");
     const hidden = placeholder(config, "US");
@@ -79,6 +91,7 @@ describe("widget.js", () => {
     expect(ok.textContent).toMatch(/^Arrives .+ – .+$/);
     expect(ok.querySelector(".ede--inherit-font")).not.toBeNull();
     expect(ok.style.minHeight).toBe("");
+    expect(ok.querySelector(".ede-branding")).toBeNull();
     for (const el of [hidden, broken, missing]) {
       expect(el.textContent).toBe("");
       expect(el.style.minHeight).toBe("");

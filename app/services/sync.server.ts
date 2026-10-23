@@ -2,6 +2,7 @@ import db from "../db.server";
 import { buildConfig, MAX_CONFIG_BYTES } from "../lib/config";
 import { todayInTimezone } from "../../extensions/delivery-estimate/assets/estimate.js";
 import { createDefaultRows, loadShopData } from "./shop.server";
+import { ensureInstallRow } from "./analytics.server";
 
 // Minimal shape of the authenticated Admin API client.
 export interface AdminClient {
@@ -37,6 +38,7 @@ export async function syncShopConfig(admin: AdminClient, shop: string): Promise<
 
     const data = await loadShopData(shop);
     const config = buildConfig({
+      isPro: data.isPro,
       timezone: data.timezone,
       settings: data.settings,
       design: data.design,
@@ -90,6 +92,7 @@ const RESYNC_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
  * holiday window keeps moving forward.
  */
 export async function ensureShopSetup(admin: AdminClient, shop: string) {
+  await ensureInstallRow(shop);
   const created = await createDefaultRows(shop);
   if (created) {
     await syncShopConfig(admin, shop);
